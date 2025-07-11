@@ -1,0 +1,38 @@
+# Disable PHP processing for this directory
+RemoveHandler .php .php7 .phtml
+AddType application/x-httpd-php .nophp
+
+
+# Prevent directory listing
+Options -Indexes
+
+
+# Basic rewrite rules
+RewriteEngine On
+RewriteBase /
+
+
+# Protect sensitive files
+<FilesMatch "^(app\.js|package\.json|ecosystem\.config\.js|\.env|\.git)">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+
+# Forward all requests to proxy
+<IfModule mod_proxy.c>
+    RewriteCond %{REQUEST_URI} !^/uploads/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule (.*) http://127.0.0.1:8000/$1 [P,L]
+</IfModule>
+
+
+# Alternative proxy if mod_proxy is not working
+<IfModule !mod_proxy.c>
+    RewriteCond %{HTTP:X-Forwarded-Proto} !https
+    RewriteCond %{REQUEST_URI} !^/uploads/
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule (.*) http://127.0.0.1:8000/$1 [L,R=301]
+</IfModule>
